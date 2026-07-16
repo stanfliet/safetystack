@@ -4,3 +4,9 @@ dist
 .env.local
 *.log
 .DS_Store
+
+nul
+safetystack
+_generate_files.py
+_create_files.py
+server.js
