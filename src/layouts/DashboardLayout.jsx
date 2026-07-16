@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
@@ -17,7 +17,11 @@ export default function DashboardLayout() {
     "/contractor-onboarding": "Contractor Onboarding", "/billing": "Billing & Subscription",
     "/settings": "Settings"
   };
-  const title = Object.entries(titles).find(([k]) => location.pathname.startsWith(k))?.[1] || "SafetyStack";
+  const title = Object.entries(titles).find(([k]) => location.pathname.startsWith(k))?.[1] || "SafetyStack";"/documents": "Document Processing",
+    "/commercial": "Commercial Management",
+    "/commercial/boq": "BOQ Analysis",
+    "/commercial/variations": "Variation Tracking",
+    "/intelligence": "Project Intelligence",
 
   return (
     <div className="flex h-screen bg-gray-50">
