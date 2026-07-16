@@ -1,0 +1,83 @@
+﻿version: '3.8'
+
+services:
+  # PostgreSQL with pgvector for AI knowledge base
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: safetystack-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: safetystack
+      POSTGRES_USER: safetystack
+      POSTGRES_PASSWORD: safetystack_secret_2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safetystack"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # OpenConstructionERP - Construction ERP with BOQ, cost control, contract mgmt
+  open-construction-erp:
+    image: ghcr.io/datadrivenconstruction/openconstructionerp:latest
+    container_name: openconstructionerp
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - oe_data:/data
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: safetystack
+      DB_USER: safetystack
+      DB_PASSWORD: safetystack_secret_2024
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # SafetyStack API Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: safetystack-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      SUPABASE_URL: \
+      SUPABASE_SERVICE_KEY: \
+      OPENAI_API_KEY: \
+      NVIDIA_API_KEY_70B: \
+      NVIDIA_API_KEY_DEEPSEEK: \
+      NVIDIA_API_KEY_NEMOTRON: \
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Frontend (Vite dev server for development)
+  frontend:
+    image: node:20-alpine
+    container_name: safetystack-frontend
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_SUPABASE_URL: \
+      VITE_SUPABASE_ANON_KEY: \
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  oe_data:

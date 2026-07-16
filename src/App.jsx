@@ -27,6 +27,7 @@ import CommercialDashboard from "./pages/commercial/CommercialDashboard";
 import BOQAnalysis from "./pages/commercial/BOQAnalysis";
 import VariationTracking from "./pages/commercial/VariationTracking";
 import IntelligenceDashboard from "./pages/intelligence/IntelligenceDashboard";
+import KnowledgeSearch from "./pages/intelligence/KnowledgeSearch";
 import HealthSafetyHub from "./pages/health-safety/HealthSafetyHub";
 import HSFileViewer from "./pages/health-safety/HSFileViewer";
 
@@ -61,9 +62,11 @@ export default function App() {
         <Route path="commercial/boq" element={<BOQAnalysis />} />
         <Route path="commercial/variations" element={<VariationTracking />} />
         <Route path="intelligence" element={<IntelligenceDashboard />} />
+        <Route path="knowledge-search" element={<KnowledgeSearch />} />
         <Route path="health-safety" element={<HealthSafetyHub />} />
         <Route path="health-safety/:id" element={<HSFileViewer />} />
       </Route>
     </Routes>
   );
 }
+
