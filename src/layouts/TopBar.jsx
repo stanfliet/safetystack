@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -18,7 +18,7 @@ export default function TopBar({ title, onMenuClick }) {
           <h1 className="text-lg md:text-xl font-bold text-gray-900">{title}</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Link to="/ai-document-generator" className="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-safety-600 text-white rounded-lg text-sm font-semibold hover:bg-safety-700 transition-colors shadow-sm">
+          <Link to="/ai-documents" className="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-safety-600 text-white rounded-lg text-sm font-semibold hover:bg-safety-700 transition-colors shadow-sm">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             Generate Document
           </Link>

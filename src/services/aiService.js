@@ -6,17 +6,14 @@ const client1B = new OpenAI({
   apiKey: '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',
   baseURL: BASE_URL,
 });
-
 const client70B = new OpenAI({
   apiKey: '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',
   baseURL: BASE_URL,
 });
-
 const clientDeepSeek = new OpenAI({
   apiKey: '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',
   baseURL: BASE_URL,
 });
-
 const clientNemotron = new OpenAI({
   apiKey: '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',
   baseURL: BASE_URL,
@@ -48,7 +45,7 @@ export async function chatWithModel(model, messages, options = {}) {
     }
     return completion.choices?.[0]?.message?.content || '';
   } catch (error) {
-    console.error(`AI model ${model} error:`, error);
+    console.error('AI model ' + model + ' error:', error);
     throw error;
   }
 }
@@ -63,76 +60,19 @@ export async function analyzeDocument(text, analysisType = 'general') {
   const model = text.length > 50000 ? 'nemotron' : text.length > 20000 ? 'deepseek' : '70b';
   return await chatWithModel(model, [
     { role: 'system', content: prompts[analysisType] || prompts.general },
-    { role: 'user', content: `Analyze this document:\n\n${text.substring(0, 100000)}` }
+    { role: 'user', content: 'Analyze this document:\n\n' + text.substring(0, 100000) }
   ], { temperature: 0.3, maxTokens: 8000 });
 }
 
 export async function generateHealthSafetyFile(projectData, documents) {
-  const sp = `You are a senior OHS practitioner (SACPCMP registered) with 25+ years in SA construction.
-Knowledge: OHS Act 85/1993, Construction Regs 2014, COIDA, SANS 10090/10400/50001, SACPCMP.
-Generate a COMPLETE site-specific H&S File in HTML with ALL required sections.`;
-  const up = `Generate complete H&S File for:
-Project: ${projectData.project_name||'[Project Name]'}
-Company: ${projectData.company_name||'[Company Name]'}
-Site: ${projectData.site_address||'[Site Address]'}
-Scope: ${projectData.scope_of_works||'[Scope]'}
-Contractor: ${projectData.principal_contractor||'[Principal Contractor]'}
-Client: ${projectData.client||'[Client]'}
-Duration: ${projectData.project_duration||'[Duration]'}
-Workers: ${projectData.number_of_workers||'[Number]'}
-Safety Officer: ${projectData.safety_officer||'[Safety Officer]'}
-Logo: ${projectData.logo_url||''}
-
-Documents uploaded: ${(documents||[]).map(d=>'- '+d.name+' ('+d.type+')').join('\n')}
-
-INCLUDE ALL SECTIONS:
-1. COVER PAGE - title, company, logo, date, doc number
-2. DOCUMENT CONTROL & INDEX - version table, full index
-3. COMPANY H&S POLICY - signed policy statement
-4. LEGAL APPOINTMENTS - Section 16.2, 8.1, Supervisor, First Aider, Fire Fighter, H&S Rep
-5. SCOPE OF WORKS - detailed description
-6. RISK ASSESSMENTS - Baseline, Issue-specific, Task-specific, COIDA
-7. METHOD STATEMENTS - for all key activities
-8. SAFE WORK PROCEDURES - for high-risk activities
-9. SITE-SPECIFIC H&S PLAN - management plan
-10. EMERGENCY PREPAREDNESS - Action Plan, Evacuation, Fire, Medical, Contacts
-11. TRAFFIC MANAGEMENT PLAN
-12. FALL PROTECTION PLAN
-13. ENVIRONMENTAL MANAGEMENT PLAN (NEMA)
-14. REGISTERS - PPE, Plant, Inspections, Visitors, Induction, Toolbox Talks, Incidents, First Aid, Fire, Chemicals, Training, Waste
-15. CHECKLISTS - Daily, Weekly, Monthly, Scaffold, Excavation, Electrical, Fire, PPE, Plant
-16. TRAINING RECORDS - Induction content, Matrix, Competency
-17. TOOLBOX TALKS - 12 talks: Height, Manual Handling, Fire, Electrical, PPE, Excavation, Scaffold, Housekeeping, Hazardous Substances, Emergency, Plant, Environment
-18. INCIDENT MANAGEMENT - Procedure, Investigation Form, Corrective Action
-19. H&S STATISTICS
-20. INSPECTION & AUDIT TEMPLATES
-21. MEDICAL - First Aid, Occupational Health
-22. CONSTRUCTION REGS 2014 COMPLIANCE CHECKLIST
-23. SANS 10400 COMPLIANCE
-24. APPENDICES
-
-Format as professional HTML with anchors, styled tables, signature blocks.`;
+  const sp = 'You are a senior OHS practitioner (SACPCMP registered) with 25+ years in SA construction.\nKnowledge: OHS Act 85/1993, Construction Regs 2014, COIDA, SANS 10090/10400/50001, SACPCMP.\nGenerate a COMPLETE site-specific H&S File in HTML with ALL required sections including:\n1. COVER PAGE, 2. DOCUMENT CONTROL & INDEX, 3. COMPANY H&S POLICY, 4. LEGAL APPOINTMENTS, 5. SCOPE OF WORKS, 6. RISK ASSESSMENTS (Baseline, Issue-specific, Task-specific), 7. METHOD STATEMENTS, 8. SAFE WORK PROCEDURES, 9. SITE-SPECIFIC H&S PLAN, 10. EMERGENCY PREPAREDNESS, 11. TRAFFIC MANAGEMENT PLAN, 12. FALL PROTECTION PLAN, 13. ENVIRONMENTAL MANAGEMENT PLAN (NEMA), 14. REGISTERS (PPE, Plant, Inspections, Visitors, Induction, Toolbox Talks, Incidents, First Aid, Fire, Chemicals, Training, Waste), 15. CHECKLISTS (Daily, Weekly, Monthly, Scaffold, Excavation, Electrical, Fire, PPE, Plant), 16. TRAINING RECORDS, 17. TOOLBOX TALKS (12 talks), 18. INCIDENT MANAGEMENT, 19. H&S STATISTICS, 20. INSPECTION & AUDIT TEMPLATES, 21. MEDICAL, 22. CONSTRUCTION REGS 2014 CHECKLIST, 23. SANS 10400 COMPLIANCE, 24. APPENDICES. Format as professional HTML with anchors, styled tables, and signature blocks. Include site-specific content based on the project data provided.';
+  const up = 'Generate complete H&S File for:\nProject: ' + (projectData.project_name || '[Project Name]') + '\nCompany: ' + (projectData.company_name || '[Company Name]') + '\nSite: ' + (projectData.site_address || '[Site Address]') + '\nScope: ' + (projectData.scope_of_works || '[Scope]') + '\nContractor: ' + (projectData.principal_contractor || '[Principal Contractor]') + '\nClient: ' + (projectData.client || '[Client]') + '\nDuration: ' + (projectData.project_duration || '[Duration]') + '\nWorkers: ' + (projectData.number_of_workers || '[Number]') + '\nSafety Officer: ' + (projectData.safety_officer || '[Safety Officer]') + '\n\nDocuments uploaded: ' + (documents || []).map(d => '- ' + d.name + ' (' + d.type + ')').join('\n');
   return await chatWithModel('nemotron', [{role:'system',content:sp},{role:'user',content:up}], {temperature:0.3,maxTokens:16000});
 }
 
 export async function priceBOQItem(item, projectLocation = 'national') {
-  const sp = `You are a PrQS (ASAQS) with 25+ years. Complete knowledge of:
-MATERIALS: concrete, reinforcement, masonry, steel, roofing, plumbing, electrical, painting, tiling, paving, joinery, waterproofing, ceilings, doors, hardware, road construction
-LABOUR RATES (SA): Skilled artisans, semi-skilled, general workers. With statutory deductions.
-CONTRACTS: FIDIC (all), COLTO, GCC, JBCC, NEC3/4, SANS 4000, SANS 10400
-COST FORMULAS: Materials=(Qty*UnitPrice)+Waste+Delivery; Labour=ProdRate*Hours*CrewSize*Rate+Stat; Plant=Hours*Rate; Transport=Dist*Tonnage*Rate; P&Gs=% of direct; Contingency=5-10%; VAT=15%
-Return ONLY valid JSON.`;
-  const up = `Price BOQ line item for ${projectLocation} (SA):
-Item: ${item.item_number||'N/A'}
-Description: ${item.description}
-Unit: ${item.unit||'each'}
-Qty: ${item.quantity||1}
-Rate: ${item.existing_rate||'N/A'}
-Category: ${item.category||'General'}
-Notes: ${item.notes||'Standard'}
-
-Return JSON: item_number, description, unit, quantity, detailed_rate_build_up (materials, labour, plant, transport), total_direct_cost, p_and_g_percentage/amount, overheads_and_profit_percentage/amount, contingency_percentage/amount, total_rate, total_amount, cost_breakdown_summary, notes_and_assumptions, data_source, market_conditions_factor`;
-  
+  const sp = 'You are a PrQS (ASAQS) with 25+ years. Complete knowledge of materials, labour rates, contracts (FIDIC, COLTO, GCC, JBCC, NEC), cost formulas. Return ONLY valid JSON.';
+  const up = 'Price BOQ line item for ' + projectLocation + ' (SA):\nItem: ' + (item.item_number || 'N/A') + '\nDescription: ' + item.description + '\nUnit: ' + (item.unit || 'each') + '\nQty: ' + (item.quantity || 1) + '\nCategory: ' + (item.category || 'General') + '\n\nReturn JSON: item_number, description, unit, quantity, detailed_rate_build_up (materials, labour, plant, transport), total_direct_cost, p_and_g_percentage, overheads_and_profit, contingency, total_rate, total_amount, notes_and_assumptions, data_source';
   const response = await chatWithModel('deepseek', [{role:'system',content:sp},{role:'user',content:up}], {temperature:0.2,maxTokens:8000});
   const jm = response.match(/\{[\s\S]*\}/);
   return jm ? JSON.parse(jm[0]) : {raw_response: response};
@@ -140,5 +80,18 @@ Return JSON: item_number, description, unit, quantity, detailed_rate_build_up (m
 
 export async function agentChat(agentId, message, conversationHistory = []) {
   const agents = {
-    'safety-officer': { name:'AI Safety Officer', sp:`You are SafetyStack's AI Safety Officer - SACPCMP registered Construction H&S Practitioner with 25+ years.
-COMPLETE KNOWLEDGE: OHS Act 85/1993, Construction Regs 2014, COIDA, SANS 10090/10400/50001, SACPCMP, Legal appointments (S16, S8.1), Risk assessments (HIRA), Method statements, Fall protection, Scaffolding, Excavation, Confined space, Emergency planning, NEMA, Incident investigation (ICAM, 5-Whys), All construction safety legislation.
+    'safety-officer': { name:'AI Safety Officer', sp:'You are SafetyStack\'s AI Safety Officer - SACPCMP registered Construction H&S Practitioner with 25+ years. Expert in OHS Act 85/1993, Construction Regs 2014, COIDA, SANS, legal appointments, risk assessments, method statements, fall protection, scaffolding, excavation, confined space, emergency planning, NEMA, incident investigation.' },
+    'quantity-surveyor': { name:'AI Quantity Surveyor', sp:'You are SafetyStack\'s AI QS - PrQS (ASAQS) with 25+ years. Expert in SANS 4000, FIDIC, GCC, JBCC, NEC, COLTO, BOQ preparation, cost estimation, variations, final accounts, construction pricing, material rates, labour rates, plant rates.' },
+    'contracts-administrator': { name:'AI Contracts Administrator', sp:'You are SafetyStack\'s AI Contracts Administrator. Expert in FIDIC (all forms), GCC, JBCC, NEC3/4, subcontract administration, claims, variations, extensions of time, payment certificates, dispute avoidance.' },
+    'compliance-officer': { name:'AI Compliance Officer', sp:'You are SafetyStack\'s AI Compliance Officer. Expert in SA construction regulations: OHS Act, Construction Regs 2014, COIDA, NEMA, NHBRC, CIDB, SACPCMP, SANS 10400, local bylaws.' },
+  };
+  const agent = agents[agentId];
+  if (!agent) return 'Agent not found. Available agents: ' + Object.keys(agents).join(', ');
+  const history = (conversationHistory || []).map(m => ({ role: m.role, content: m.content }));
+  const response = await chatWithModel('70b', [
+    { role: 'system', content: agent.sp },
+    ...history.slice(-10),
+    { role: 'user', content: message }
+  ], { temperature: 0.3, maxTokens: 4000 });
+  return response;
+}

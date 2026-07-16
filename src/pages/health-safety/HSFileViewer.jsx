@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import toast from "react-hot-toast";
@@ -66,6 +66,91 @@ export default function HSFileViewer() {
   if (!file) return <p>File not found</p>;
 
   const sections = extractSections(file.content);
+// Insert these functions before the return statement:
+
+async function handleDownloadExcel() {
+  const content = file.content || "";
+  try {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.utils.book_new();
+    const rows = [{ "Section": "Document Title", "Content": file.title }];
+    rows.push({ "Section": "Project", "Content": file.projects?.name || "N/A" });
+    // Parse HTML content into structured rows
+    const div = document.createElement("div");
+    div.innerHTML = content;
+    div.querySelectorAll("h1, h2, h3, h4, p, table").forEach(el => {
+      if (el.tagName.match(/^H[1-4]$/)) {
+        rows.push({ "Section": el.textContent.trim(), "Content": "" });
+      } else if (el.tagName === "P" && el.textContent.trim()) {
+        rows.push({ "Section": "", "Content": el.textContent.trim() });
+      } else if (el.tagName === "TABLE") {
+        const headers = Array.from(el.querySelectorAll("th")).map(th => th.textContent.trim());
+        el.querySelectorAll("tr").forEach(tr => {
+          const cells = Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim());
+          if (cells.length) {
+            const row = {};
+            headers.forEach((h, i) => row[h || `Col${i+1}`] = cells[i] || "");
+            rows.push(row);
+          }
+        });
+      }
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, "H&S File");
+    XLSX.writeFile(wb, (file.title || "hs-file").replace(/[^a-zA-Z0-9]/g, "_") + ".xlsx");
+    toast.success("Excel file downloaded");
+  } catch (e) {
+    toast.error("Excel export failed: " + e.message);
+  }
+}
+
+async function handleDownloadWord() {
+  const html = file.content || "";
+  const styledHtml = `<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office'
+      xmlns:w='urn:schemas-microsoft-com:office:word'
+      xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset="UTF-8">
+  <style>body{font-family:Calibri,Arial,sans-serif;max-width:1200px;margin:auto;padding:30px}
+    h1{color:#1e40af;font-size:24pt}h2{color:#1e3a8a;border-bottom:2px solid #1e40af;margin-top:32px;font-size:18pt}
+    table{width:100%;border-collapse:collapse;margin:16px 0;font-size:11pt}
+    th,td{border:1px solid #666;padding:8px}th{background:#1e40af;color:white;font-weight:bold}
+    .signature{margin-top:40px;border-top:1px solid #999;padding-top:10px}
+    @page{size:A4;margin:20mm 25mm}</style>
+</head><body>${html}</body></html>`;
+  const blob = new Blob([styledHtml], { type: "application/msword" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = (file.title || "hs-file").replace(/[^a-zA-Z0-9]/g, "_") + ".doc";
+  a.click();
+  URL.revokeObjectURL(url);
+  toast.success("Word document downloaded");
+}
+
+function handleDownloadPDF() {
+  const w = window.open("", "_blank");
+  if (!w) { toast.error("Pop-up blocked. Allow pop-ups for PDF generation."); return; }
+  w.document.write(`<html><head><title>${file.title}</title>
+    <style>@media print{body{font-size:12pt}} body{font-family:Arial,sans-serif;max-width:1200px;margin:auto;padding:20px}
+    h1{color:#1e40af}h2{color:#1e3a8a;border-bottom:2px solid #1e40af;margin-top:32px}
+    table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ddd;padding:10px}th{background:#1e40af;color:white}
+    .no-print{display:none}</style></head><body>${file.content || "<p>No content</p>"}
+    <script>window.onload=function(){window.print()};<\/script></body></html>`);
+  w.document.close();
+  toast.success("PDF preview opened. Use browser print (Ctrl+P) to save as PDF.");
+}
+
+// In the return section, update the button group to:
+<div className="flex gap-2 flex-wrap">
+  <button onClick={() => setEditMode(!editMode)} className="btn-secondary">
+    {editMode ? "Preview" : "Edit"}
+  </button>
+  <button onClick={handleDownloadWord} className="btn-outline">Word</button>
+  <button onClick={handleDownloadExcel} className="btn-outline">Excel</button>
+  <button onClick={handleDownloadPDF} className="btn-outline">PDF</button>
+  <button onClick={handleDownload} className="btn-primary">HTML</button>
+</div>
 
   return (
     <div>
@@ -80,7 +165,7 @@ export default function HSFileViewer() {
         </div>
         <div className="flex gap-2">
           <button onClick={() => setEditMode(!editMode)} className="btn-secondary">{editMode ? "Preview" : "Edit"}</button>
-          <button onClick={handleDownload} className="btn-primary">Download HTML</button>
+          <button onClick={handleDownloadWord} className="btn-outline text-xs">Word</button><button onClick={handleDownloadExcel} className="btn-outline text-xs">Excel</button><button onClick={handleDownloadPDF} className="btn-outline text-xs">PDF</button><button onClick={handleDownload} className="btn-primary text-xs">HTML</button>
         </div>
       </div>
       <div className="grid grid-cols-4 gap-6">
@@ -117,3 +202,4 @@ export default function HSFileViewer() {
     </div>
   );
 }
+
