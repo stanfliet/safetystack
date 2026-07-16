@@ -11,7 +11,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <AuthProvider>
         <App />
-        <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: "#1e293b", color: "#f8fafc", borderRadius: "8px" } }} />
+        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

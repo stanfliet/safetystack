@@ -1,11 +1,11 @@
-﻿import Stripe from "stripe";
-
+﻿const Stripe = require("stripe");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { tier, interval, user_id } = req.body;
+
   const priceIds = {
     starter: { monthly: "price_starter_monthly", annually: "price_starter_annual" },
     professional: { monthly: "price_professional_monthly", annually: "price_professional_annual" },
