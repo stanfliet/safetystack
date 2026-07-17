@@ -1,4 +1,4 @@
-﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
@@ -10,7 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const BOQ_SYSTEM_PROMPT = You are a Senior Quantity Surveyor and Construction Cost Estimator with 25+ years of experience in South Africa.
+const BOQ_SYSTEM_PROMPT = `You are a Senior Quantity Surveyor and Construction Cost Estimator with 25+ years of experience in South Africa.
 You have expert knowledge of:
 - All construction trades and their material/labour/plant costs
 - Labour rates: skilled (R250-R450/hr), semi-skilled (R150-R250/hr), general workers (R80-R150/hr)
@@ -31,7 +31,7 @@ For each BOQ line item, calculate:
 7. Total Line Item Cost - Subtotal + P&G's
 8. Total Project Cost - sum of all line items + P&G's
 
-Use current South African market rates (2025-2026). Provide output in ZAR (South African Rand).
+Use current South African market rates (2025-2026). Provide output in ZAR (South African Rand).`
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -39,9 +39,9 @@ serve(async (req) => {
   try {
     const { text_content, file_type, project_name } = await req.json()
     
-    const prompt = Analyze and price the following Bill of Quantities. 
-Project: 
-File type: 
+    const prompt = `Analyze and price the following Bill of Quantities. 
+Project: ${project_name || 'N/A'}
+File type: ${file_type || 'N/A'}
 
 Extract ALL line items with their descriptions and quantities. For each item:
 1. Assign the correct unit of measure
@@ -88,12 +88,13 @@ Return as structured JSON with this exact format:
 }
 
 BOQ Content:
+${text_content}`
 
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': Bearer ,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

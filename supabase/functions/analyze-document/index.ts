@@ -1,4 +1,4 @@
-﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
@@ -25,7 +25,7 @@ serve(async (req) => {
       'legal': 'You are a legal document analyst specializing in construction law. Identify legal implications, obligations, and potential risks.',
     }
     
-    const prompt = Analyze the following document of type .
+    const prompt = `Analyze the following document of type ${analysis_type || 'general'}.
 
 Provide a comprehensive analysis including:
 1. Document summary (2-3 sentences)
@@ -36,12 +36,13 @@ Provide a comprehensive analysis including:
 6. Recommendations
 
 Document content:
+${text_content}`
 
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': Bearer ,
+        'Authorization': `Bearer ${openaiApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

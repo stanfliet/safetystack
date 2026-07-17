@@ -1,4 +1,4 @@
-﻿import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
@@ -21,7 +21,7 @@ interface HsFileRequest {
   sections: string[] // which sections to generate
 }
 
-const SYSTEM_PROMPT = You are a South African Health & Safety documentation expert.
+const SYSTEM_PROMPT = `You are a South African Health & Safety documentation expert.
 You have extensive knowledge of:
 - OHSA (Occupational Health and Safety Act 85 of 1993)
 - Construction Regulations 2014
@@ -52,7 +52,7 @@ serve(async (req) => {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': Bearer ,
+          'Authorization': `Bearer ${openaiApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -117,118 +117,3 @@ function getSectionTitle(section: string): string {
   return map[section] || section
 }
 
-function getSectionPrompt(section: string, info: any): string {
-  const base = Project: 
-Project Number: 
-Address: 
-Client: 
-Contractor: 
-Site Manager: 
-
-
-  const prompts: Record<string, string> = {
-    'index': ${base}\nGenerate a complete document index/table of contents for a Health and Safety File with all required sections, page numbers, and document references.,
-    'legal-appointments': ${base}\nGenerate ALL required legal appointments under OHSA and Construction Regulations 2014 including: 
-1. CEO/MD Appointment (Section 16(1) & 16(2))
-2. Construction Manager Appointment
-3. Site Supervisor Appointment
-4. Health & Safety Officer Appointment
-5. Fall Protection Plan Supervisor
-6. Scaffolding Supervisor
-7. Electrical Contractor Appointment
-8. Fire Prevention Officer
-9. First Aider Appointment
-10. Environmental Officer
-Each with formal letter format, full legislative references, and acceptance sections.,
-    'policies': ${base}\nGenerate comprehensive H&S policies including: Health & Safety Policy (signed by CEO), Alcohol & Substance Abuse Policy, Smoking Policy, PPE Policy, HIV/AIDS Policy, Harassment Policy, Environmental Policy, Quality Policy. Each with company letterhead format.,
-    'risk-assessments': ${base}\nGenerate detailed risk assessments for construction activities including: 
-- Working at height
-- Excavation and trenching
-- Lifting operations
-- Electrical work
-- Hot work
-- Demolition
-- Confined spaces
-- Plant and machinery operations
-- Manual handling
-Each with hazard identification, risk rating (before/after controls), control measures, and responsible persons.,
-    'hs-plan': ${base}\nGenerate a comprehensive H&S Management Plan including: 
-1. Project description and scope
-2. H&S policy and objectives
-3. Organisational structure and responsibilities
-4. Risk management approach
-5. Training and competency requirements
-6. Incident management procedure
-7. Emergency procedures
-8. Monitoring and measurement
-9. Audit and review
-10. Documentation and records,
-    'evacuation': ${base}\nGenerate a complete emergency evacuation plan including: 
-- Assembly points
-- Evacuation routes and diagrams
-- Fire prevention measures
-- Emergency contact numbers
-- Fire drill schedule
-- Roles and responsibilities during evacuation
-- Persons with special needs procedure,
-    'emergency': ${base}\nGenerate emergency preparedness and readiness procedures including:
-- Medical emergency response
-- Fire emergency response
-- Chemical spill response
-- Structural collapse response
-- Severe weather response
-- First aid requirements and station locations
-- Emergency equipment inventory
-- Communication protocol during emergencies,
-    'toolbox-talks': ${base}\nGenerate 20 toolbox talk topics with full content for each including: 
-1. Working at Height Safety
-2. Electrical Safety
-3. Fire Safety
-4. Manual Handling
-5. PPE Usage
-6. Excavation Safety
-7. Scaffolding Safety
-8. Ladder Safety
-9. Housekeeping
-10. Chemical Safety
-11. Noise and Hearing Protection
-12. Hand and Power Tool Safety
-13. Lifting Operations
-14. Welding Safety
-15. Confined Space Awareness
-16. Fall Protection
-17. Emergency Procedures
-18. Environmental Awareness
-19. Fatigue Management
-20. Substance Abuse
-Each with: topic title, key points, discussion questions, and acknowledgement section.,
-    'method-statements': ${base}\nGenerate detailed method statements for: excavations, concrete works, steel erection, scaffolding erection/use/dismantling, roofing works, electrical installations, plumbing works, painting works, demolition, and crane lifting operations. Each with sequence of work, hazards identified, controls, and PPE requirements.,
-    'registers': ${base}\nGenerate register templates for: 
-- Plant and equipment register
-- PPE issue register
-- Training register
-- Incident/accident register
-- First aid treatment register
-- Fire equipment inspection register
-- Scaffold inspection register
-- Ladder register
-- Visitor register
-- Toolbox talk attendance register
-- Hazard identification register
-- Medical surveillance register,
-    'checklists': ${base}\nGenerate comprehensive inspection checklists for:
-- Daily site inspection
-- Weekly H&S inspection
-- Scaffolding inspection
-- Electrical equipment inspection (portable tool testing)
-- Fire extinguisher inspection
-- First aid kit inspection
-- PPE inspection
-- Ladder inspection
-- Excavation inspection
-- Crane and lifting equipment inspection,
-    'appendix': ${base}\nGenerate appendix section with: relevant legislation references (OHSA, Construction Regs, COIDA, BCEA), SANS standards references, definitions and abbreviations, industry body contacts (CIDB, SACPCMP, NHBRC), and reference documents list.
-  }
-  
-  return prompts[section] || ${base}\nGenerate content for .
-}
