@@ -43,7 +43,7 @@ const SEED_DATA = {
     { category: "plant", item_code: "PLT-GEN50", description: "Diesel Generator 50kVA", unit: "hr", unit_price: 280 },
     { category: "plant", item_code: "PLT-WLDR", description: "Diesel Welder (400A)", unit: "hr", unit_price: 250 },
     { category: "plant", item_code: "PLT-FORK", description: "Forklift 3-ton", unit: "hr", unit_price: 300 },
-    { category: "plant", item_code: "PLT-TIPPER", description: "Tipper Truck 15-ton", unit": "hr", unit_price: 520 },
+    { category: "plant", item_code: "PLT-TIPPER", description: "Tipper Truck 15-ton", unit: "hr", unit_price: 520 },
     { category: "plant", item_code: "PLT-WTR", description: "Water Tanker 10,000L", unit: "hr", unit_price: 400 }
   ],
   labour: [
