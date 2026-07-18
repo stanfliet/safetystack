@@ -1,5 +1,5 @@
--- SafetyStack Complete Database Schema
--- Idempotent — safe to run multiple times
+﻿-- SafetyStack Complete Database Schema
+-- Idempotent â€” safe to run multiple times
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Profiles (auto-created via trigger)
@@ -311,6 +311,20 @@ CREATE POLICY "Users can create hs_files" ON hs_files FOR INSERT WITH CHECK (aut
 DROP POLICY IF EXISTS "Users can update own hs_files" ON hs_files;
 CREATE POLICY "Users can update own hs_files" ON hs_files FOR UPDATE USING (auth.uid() = user_id);
 
+
+-- Ensure columns exist on already-created tables (idempotency fix)
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE;
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE variations ADD COLUMN IF NOT EXISTS project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE;
+ALTER TABLE variations ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE intelligence_insights ADD COLUMN IF NOT EXISTS project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE;
+ALTER TABLE intelligence_insights ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE hs_files ADD COLUMN IF NOT EXISTS project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE;
+ALTER TABLE hs_files ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
 CREATE INDEX IF NOT EXISTS idx_safety_documents_project ON safety_documents(project_id);
@@ -328,3 +342,4 @@ CREATE INDEX IF NOT EXISTS idx_variations_project ON variations(project_id);
 CREATE INDEX IF NOT EXISTS idx_intelligence_insights_project ON intelligence_insights(project_id);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_user ON activity_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_hs_files_project ON hs_files(project_id);
+
