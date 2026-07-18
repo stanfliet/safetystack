@@ -237,6 +237,7 @@ CREATE TABLE IF NOT EXISTS boq_items (
 );
 ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS project_id UUID;
 ALTER TABLE boq_items ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE boq_items DROP CONSTRAINT IF EXISTS boq_items_project_id_fkey;
 ALTER TABLE boq_items ADD CONSTRAINT boq_items_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
 ALTER TABLE boq_items ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own boq items" ON boq_items;
@@ -257,6 +258,7 @@ CREATE TABLE IF NOT EXISTS variations (
 );
 ALTER TABLE variations ADD COLUMN IF NOT EXISTS project_id UUID;
 ALTER TABLE variations ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE variations DROP CONSTRAINT IF EXISTS variations_project_id_fkey;
 ALTER TABLE variations ADD CONSTRAINT variations_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
 ALTER TABLE variations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own variations" ON variations;
@@ -275,6 +277,7 @@ CREATE TABLE IF NOT EXISTS intelligence_insights (
 );
 ALTER TABLE intelligence_insights ADD COLUMN IF NOT EXISTS project_id UUID;
 ALTER TABLE intelligence_insights ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE intelligence_insights DROP CONSTRAINT IF EXISTS intelligence_insights_project_id_fkey;
 ALTER TABLE intelligence_insights ADD CONSTRAINT intelligence_insights_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
 ALTER TABLE intelligence_insights ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own intelligence" ON intelligence_insights;
@@ -291,6 +294,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE activity_logs DROP CONSTRAINT IF EXISTS activity_logs_project_id_fkey;
 ALTER TABLE activity_logs ADD CONSTRAINT activity_logs_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own activity" ON activity_logs;
@@ -307,6 +311,7 @@ CREATE TABLE IF NOT EXISTS documents (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE documents DROP CONSTRAINT IF EXISTS documents_project_id_fkey;
 ALTER TABLE documents ADD CONSTRAINT documents_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL;
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own documents_upload" ON documents;
@@ -326,6 +331,7 @@ CREATE TABLE IF NOT EXISTS hs_files (
 );
 ALTER TABLE hs_files ADD COLUMN IF NOT EXISTS project_id UUID;
 ALTER TABLE hs_files ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE hs_files DROP CONSTRAINT IF EXISTS hs_files_project_id_fkey;
 ALTER TABLE hs_files ADD CONSTRAINT hs_files_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
 ALTER TABLE hs_files ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own hs_files" ON hs_files;

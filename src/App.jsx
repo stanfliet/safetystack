@@ -30,7 +30,8 @@ import IntelligenceDashboard from "./pages/intelligence/IntelligenceDashboard";
 import KnowledgeSearch from "./pages/intelligence/KnowledgeSearch";
 import HealthSafetyHub from "./pages/health-safety/HealthSafetyHub";
 import HSFileViewer from "./pages/health-safety/HSFileViewer";
-
+import BOQUpload from "./pages/commercial/BOQUpload";
+import TrainingCenter from "./pages/training/TrainingCenter";
 export default function App() {
   return (
     <Routes>
@@ -64,6 +65,8 @@ export default function App() {
         <Route path="intelligence" element={<IntelligenceDashboard />} />
         <Route path="knowledge-search" element={<KnowledgeSearch />} />
         <Route path="health-safety" element={<HealthSafetyHub />} />
+        <Route path="commercial/boq-upload" element={<BOQUpload />} />
+       <Route path="training" element={<TrainingCenter />} />
         <Route path="health-safety/:id" element={<HSFileViewer />} />
       </Route>
     </Routes>

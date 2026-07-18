@@ -4,6 +4,10 @@
 
 @layer base {
   body { @apply bg-gray-50 text-gray-900 antialiased; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 }
 @layer components {
   .card { @apply bg-white rounded-xl border border-gray-200 shadow-sm; }
@@ -25,10 +29,100 @@
   .badge-neutral { @apply badge bg-gray-100 text-gray-800; }
 }
 
+/* Full-height root */
 html, body, #root {
   height: 100%;
   min-height: 100vh;
   overflow: auto;
+}
+
+/* Professional sidebar scroll fix */
+aside nav {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+aside {
+  overscroll-behavior: contain;
+}
+
+/* Professional hero with construction background overlay */
+.hero-construction {
+  position: relative;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.92), rgba(15, 23, 42, 0.88)),
+    url('https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=1200&q=80') center/cover no-repeat;
+}
+.hero-construction-2 {
+  position: relative;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 64, 175, 0.85)),
+    url('https://images.unsplash.com/photo-1541888946425-d81bb56b8e79?w=1200&q=80') center/cover no-repeat;
+}
+
+/* Card hover effects */
+.card {
+  @apply bg-white rounded-xl border border-gray-200 shadow-sm;
+  transition: all 0.25s ease;
+}
+.card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Animated gradient accent bars */
+.accent-bar {
+  height: 3px;
+  background: linear-gradient(90deg, #1e40af, #3b82f6, #1e40af);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%, 100% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
+}
+
+/* Dashboard stat cards */
+.stat-card {
+  @apply bg-white rounded-xl border border-gray-200 p-6;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #1e40af, #3b82f6);
+}
+
+/* Sidebar active item glow */
+a.bg-safety-50 {
+  box-shadow: inset 3px 0 0 0 #1e40af;
+}
+
+/* Construction-themed decorative elements */
+.construction-pattern {
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(30, 64, 175, 0.03) 40px, rgba(30, 64, 175, 0.03) 41px),
+    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(30, 64, 175, 0.03) 40px, rgba(30, 64, 175, 0.03) 41px);
+}
+
+/* Modal backdrop blur */
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Print-friendly certificates */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; }
 }
 
 .data-table-wrapper {

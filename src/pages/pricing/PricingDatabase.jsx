@@ -1,66 +1,76 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
-import DataTable, { Modal } from "../../components/ui/DataTable";
+import DataTable from "../../components/ui/DataTable";
 import toast from "react-hot-toast";
+
+const ANALYSIS_TYPES = [
+  { value: "general", label: "General Analysis" },
+  { value: "boq", label: "BOQ Pricing" },
+  { value: "hs", label: "H&S Requirements" },
+  { value: "compliance", label: "Compliance Check" },
+  { value: "scope", label: "Scope of Works" },
+  { value: "tender", label: "Tender Evaluation" },
+  { value: "contract", label: "Contract Review" }
+];
 
 const SEED_DATA = {
   materials: [
-    { category: "materials", item_code: "CON-G20", description: "Ready-mix Concrete Grade 20 (20MPa)", unit: "m3", unit_price: 1850 },
-    { category: "materials", item_code: "CON-G25", description: "Ready-mix Concrete Grade 25 (25MPa)", unit: "m3", unit_price: 1950 },
-    { category: "materials", item_code: "CON-G30", description: "Ready-mix Concrete Grade 30 (30MPa)", unit: "m3", unit_price: 2100 },
-    { category: "materials", item_code: "STL-Y12", description: "Reinforcing Steel Y12", unit: "ton", unit_price: 18500 },
-    { category: "materials", item_code: "STL-Y16", description: "Reinforcing Steel Y16", unit: "ton", unit_price: 18200 },
-    { category: "materials", item_code: "BRK-CL", description: "Clay Face Brick (100x220x75mm)", unit: "each", unit_price: 4.50 },
-    { category: "materials", item_code: "BRK-CM", description: "Cement Brick (90x190x90mm)", unit: "each", unit_price: 2.80 },
-    { category: "materials", item_code: "CEM-C42", description: "Cement CEM I 42.5N (50kg bag)", unit: "bag", unit_price: 95 },
-    { category: "materials", item_code: "AGG-13", description: "13mm Crushed Stone", unit: "ton", unit_price: 320 },
-    { category: "materials", item_code: "AGG-19", description: "19mm Crushed Stone", unit: "ton", unit_price: 310 },
-    { category: "materials", item_code: "SND-RV", description: "River Sand", unit: "ton", unit_price: 250 },
-    { category: "materials", item_code: "SND-BL", description: "Building Sand/Plaster Sand", unit: "ton", unit_price: 220 },
-    { category: "materials", item_code: "TMB-BRG", description: "Structural Timber Beam (76x152mm)", unit: "m", unit_price: 85 },
-    { category: "materials", item_code: "TMB-PLY", description: "WBP Plywood 18mm", unit: "sheet", unit_price: 450 },
-    { category: "materials", item_code: "TMB-SHUT", description: "Shutterply 18mm (Formwork)", unit: "sheet", unit_price: 580 },
-    { category: "materials", item_code: "PLB-PVC50", description: "uPVC Pipe 50mm class 16", unit: "m", unit_price: 65 },
-    { category: "materials", item_code: "PLB-PVC110", description: "uPVC Pipe 110mm class 16", unit: "m", unit_price: 125 },
-    { category: "materials", item_code: "ELC-2.5", description: "Twin & Earth Cable 2.5mm2", unit: "m", unit_price: 18 },
-    { category: "materials", item_code: "ELC-6.0", description: "Twin & Earth Cable 6.0mm2", unit: "m", unit_price: 32 },
-    { category: "materials", item_code: "PPE-HLM", description: "Safety Helmet (Standard)", unit: "each", unit_price: 85 },
-    { category: "materials", item_code: "PPE-VST", description: "Safety Vest (Hi-Vis)", unit: "each", unit_price: 45 },
-    { category: "materials", item_code: "PPE-BTS", description: "Safety Boots (Steel Toe)", unit: "pair", unit_price: 350 }
+    { category: "materials", code: "CON-G20", description: "Ready-mix Concrete Grade 20 (20MPa)", unit: "m3", total_rate: 1850 },
+    { category: "materials", code: "CON-G25", description: "Ready-mix Concrete Grade 25 (25MPa)", unit: "m3", total_rate: 1950 },
+    { category: "materials", code: "CON-G30", description: "Ready-mix Concrete Grade 30 (30MPa)", unit: "m3", total_rate: 2100 },
+    { category: "materials", code: "STL-Y12", description: "Reinforcing Steel Y12", unit: "ton", total_rate: 18500 },
+    { category: "materials", code: "STL-Y16", description: "Reinforcing Steel Y16", unit: "ton", total_rate: 18200 },
+    { category: "materials", code: "BRK-CL", description: "Clay Face Brick (100x220x75mm)", unit: "each", total_rate: 4.50 },
+    { category: "materials", code: "BRK-CM", description: "Cement Brick (90x190x90mm)", unit: "each", total_rate: 2.80 },
+    { category: "materials", code: "CEM-C42", description: "Cement CEM I 42.5N (50kg bag)", unit: "bag", total_rate: 95 },
+    { category: "materials", code: "AGG-13", description: "13mm Crushed Stone", unit: "ton", total_rate: 320 },
+    { category: "materials", code: "AGG-19", description: "19mm Crushed Stone", unit: "ton", total_rate: 310 },
+    { category: "materials", code: "SND-RVR", description: "River Sand", unit: "m3", total_rate: 280 },
+    { category: "materials", code: "SND-PLT", description: "Plaster Sand", unit: "m3", total_rate: 260 },
+    { category: "materials", code: "BLD-CMU90", description: "Concrete Masonry Unit 90mm", unit: "each", total_rate: 3.20 },
+    { category: "materials", code: "BLD-CMU140", description: "Concrete Masonry Unit 140mm", unit: "each", total_rate: 4.80 },
+    { category: "materials", code: "TMB-SHUT", description: "Shuttering Plywood 18mm", unit: "sheet", total_rate: 580 },
+    { category: "materials", code: "PLB-PVC50", description: "uPVC Pipe 50mm class 16", unit: "m", total_rate: 65 },
+    { category: "materials", code: "PLB-PVC110", description: "uPVC Pipe 110mm class 16", unit: "m", total_rate: 125 },
+    { category: "materials", code: "ELC-2.5", description: "Twin & Earth Cable 2.5mm2", unit: "m", total_rate: 18 },
+    { category: "materials", code: "ELC-6.0", description: "Twin & Earth Cable 6.0mm2", unit: "m", total_rate: 32 },
+    { category: "materials", code: "PPE-HLM", description: "Safety Helmet (Standard)", unit: "each", total_rate: 85 },
+    { category: "materials", code: "PPE-VST", description: "Safety Vest (Hi-Vis)", unit: "each", total_rate: 45 },
+    { category: "materials", code: "PPE-BTS", description: "Safety Boots (Steel Toe)", unit: "pair", total_rate: 350 }
   ],
   plant: [
-    { category: "plant", item_code: "PLT-EXC20", description: "Excavator 20-ton", unit: "hr", unit_price: 650 },
-    { category: "plant", item_code: "PLT-TLB", description: "Tractor Loader Backhoe (TLB)", unit: "hr", unit_price: 450 },
-    { category: "plant", item_code: "PLT-GRDR", description: "Motor Grader", unit: "hr", unit_price: 750 },
-    { category: "plant", item_code: "PLT-ROLL10", description: "Vibratory Roller 10-ton", unit: "hr", unit_price: 550 },
-    { category: "plant", item_code: "PLT-CRANE25", description: "Mobile Crane 25-ton", unit: "hr", unit_price: 950 },
-    { category: "plant", item_code: "PLT-DUMP10", description: "Dump Truck 10m3", unit: "hr", unit_price: 480 },
-    { category: "plant", item_code: "PLT-CONCP", description: "Concrete Pump (boom)", unit: "hr", unit_price: 750 },
-    { category: "plant", item_code: "PLT-BACKHOE", description: "Backhoe Loader", unit: "hr", unit_price: 420 },
-    { category: "plant", item_code: "PLT-SKID", description: "Skid Steer Loader", unit: "hr", unit_price: 380 },
-    { category: "plant", item_code: "PLT-COMP", description: "Diesel Compressor (250cfm)", unit: "hr", unit_price: 320 },
-    { category: "plant", item_code: "PLT-GEN50", description: "Diesel Generator 50kVA", unit: "hr", unit_price: 280 },
-    { category: "plant", item_code: "PLT-WLDR", description: "Diesel Welder (400A)", unit: "hr", unit_price: 250 },
-    { category: "plant", item_code: "PLT-FORK", description: "Forklift 3-ton", unit: "hr", unit_price: 300 },
-    { category: "plant", item_code: "PLT-TIPPER", description: "Tipper Truck 15-ton", unit: "hr", unit_price: 520 },
-    { category: "plant", item_code: "PLT-WTR", description: "Water Tanker 10,000L", unit: "hr", unit_price: 400 }
+    { category: "plant", code: "PLT-EXC20", description: "Excavator 20-ton", unit: "hr", total_rate: 650 },
+    { category: "plant", code: "PLT-TLB", description: "Tractor Loader Backhoe (TLB)", unit: "hr", total_rate: 450 },
+    { category: "plant", code: "PLT-GRDR", description: "Motor Grader", unit: "hr", total_rate: 750 },
+    { category: "plant", code: "PLT-ROLL10", description: "Vibratory Roller 10-ton", unit: "hr", total_rate: 550 },
+    { category: "plant", code: "PLT-CRANE25", description: "Mobile Crane 25-ton", unit: "hr", total_rate: 950 },
+    { category: "plant", code: "PLT-DUMP10", description: "Dump Truck 10m3", unit: "hr", total_rate: 480 },
+    { category: "plant", code: "PLT-CONCP", description: "Concrete Pump (boom)", unit: "hr", total_rate: 750 },
+    { category: "plant", code: "PLT-BACKHOE", description: "Backhoe Loader", unit: "hr", total_rate: 420 },
+    { category: "plant", code: "PLT-SKID", description: "Skid Steer Loader", unit: "hr", total_rate: 380 },
+    { category: "plant", code: "PLT-COMP", description: "Diesel Compressor (250cfm)", unit: "hr", total_rate: 320 },
+    { category: "plant", code: "PLT-GEN50", description: "Diesel Generator 50kVA", unit: "hr", total_rate: 280 },
+    { category: "plant", code: "PLT-WLDR", description: "Diesel Welder (400A)", unit: "hr", total_rate: 250 },
+    { category: "plant", code: "PLT-FORK", description: "Forklift 3-ton", unit: "hr", total_rate: 300 },
+    { category: "plant", code: "PLT-TIPPER", description: "Tipper Truck 15-ton", unit: "hr", total_rate: 520 },
+    { category: "plant", code: "PLT-WTR", description: "Water Tanker 10,000L", unit: "hr", total_rate: 400 }
   ],
   labour: [
-    { category: "labour", item_code: "LAB-GEN", description: "General Worker (unskilled)", unit: "hr", unit_price: 35 },
-    { category: "labour", item_code: "LAB-SKL", description: "Semi-skilled Worker", unit: "hr", unit_price: 55 },
-    { category: "labour", item_code: "LAB-ART", description: "Artisan (skilled)", unit: "hr", unit_price: 85 },
-    { category: "labour", item_code: "LAB-WLDR", description: "Certified Welder", unit: "hr", unit_price: 95 },
-    { category: "labour", item_code: "LAB-ELEC", description: "Electrician", unit: "hr", unit_price: 90 },
-    { category: "labour", item_code: "LAB-PLMB", description: "Plumber", unit: "hr", unit_price: 85 },
-    { category: "labour", item_code: "LAB-CRNO", description: "Crane Operator", unit: "hr", unit_price: 80 },
-    { category: "labour", item_code: "LAB-EXCO", description: "Excavator Operator", unit: "hr", unit_price: 75 },
-    { category: "labour", item_code: "LAB-SFGO", description: "Safety Officer (qualified)", unit: "hr", unit_price: 110 },
-    { category: "labour", item_code: "LAB-TPDR", description: "Truck/Tipper Driver", unit: "hr", unit_price: 60 },
-    { category: "labour", item_code: "LAB-LABT", description: "Laboratory Technician", unit: "hr", unit_price: 95 },
-    { category: "labour", item_code: "LAB-QS", description: "Quantity Surveyor", unit: "hr", unit_price: 180 },
-    { category: "labour", item_code: "LAB-ENGC", description: "Civil Engineer", unit: "hr", unit_price: 220 },
-    { category: "labour", item_code: "LAB-FORMN", description: "Foreman", unit: "hr", unit_price: 75 }
+    { category: "labour", code: "LAB-GEN", description: "General Worker (unskilled)", unit: "hr", total_rate: 35 },
+    { category: "labour", code: "LAB-SKL", description: "Semi-skilled Worker", unit: "hr", total_rate: 55 },
+    { category: "labour", code: "LAB-ART", description: "Artisan (skilled)", unit: "hr", total_rate: 85 },
+    { category: "labour", code: "LAB-WLDR", description: "Certified Welder", unit: "hr", total_rate: 95 },
+    { category: "labour", code: "LAB-ELEC", description: "Electrician", unit: "hr", total_rate: 90 },
+    { category: "labour", code: "LAB-PLMB", description: "Plumber", unit: "hr", total_rate: 85 },
+    { category: "labour", code: "LAB-CRNO", description: "Crane Operator", unit: "hr", total_rate: 80 },
+    { category: "labour", code: "LAB-EXCO", description: "Excavator Operator", unit: "hr", total_rate: 75 },
+    { category: "labour", code: "LAB-SFGO", description: "Safety Officer (qualified)", unit: "hr", total_rate: 110 },
+    { category: "labour", code: "LAB-TPDR", description: "Truck/Tipper Driver", unit: "hr", total_rate: 60 },
+    { category: "labour", code: "LAB-LABT", description: "Laboratory Technician", unit: "hr", total_rate: 95 },
+    { category: "labour", code: "LAB-QS", description: "Quantity Surveyor", unit: "hr", total_rate: 180 },
+    { category: "labour", code: "LAB-ENGC", description: "Civil Engineer", unit: "hr", total_rate: 220 },
+    { category: "labour", code: "LAB-FORMN", description: "Foreman", unit: "hr", total_rate: 75 }
   ]
 };
 
@@ -96,8 +106,13 @@ export default function PricingDatabase() {
     let seeded = 0;
     for (const cat of ["materials", "plant", "labour"]) {
       const batch = SEED_DATA[cat].map(item => ({
-        ...item,
-        total_rate: item.unit_price,
+        category: item.category,
+        code: item.code,
+        description: item.description,
+        unit: item.unit,
+        total_rate: item.total_rate,
+        supply_rate: 0,
+        install_rate: 0,
         region: "national",
         source: "ASAQS 2024",
         user_id: user.id
@@ -120,7 +135,6 @@ export default function PricingDatabase() {
     const rate = parseFloat(form.supply_rate) + parseFloat(form.install_rate);
     const { error } = await supabase.from("pricing_items").insert({
       ...form, user_id: user.id,
-      unit_price: rate,
       supply_rate: parseFloat(form.supply_rate) || 0,
       install_rate: parseFloat(form.install_rate) || 0,
       total_rate: parseFloat(form.total_rate) || rate
@@ -130,93 +144,56 @@ export default function PricingDatabase() {
   }
 
   const cols = [
-    { Header: "Code", accessor: "item_code", cell: r => <span className="font-mono text-xs">{r.item_code || "-"}</span> },
+    { Header: "Code", accessor: "code", cell: r => <span className="font-mono text-xs">{r.code || "-"}</span> },
     { Header: "Description", accessor: "description", cell: r => <span className="font-medium">{r.description}</span> },
     { Header: "Unit", accessor: "unit", cell: r => <span className="text-sm">{r.unit}</span> },
-    { Header: "Unit Price", accessor: "unit_price", cell: r => r.unit_price ? "R " + Number(r.unit_price).toLocaleString() : r.total_rate ? "R " + Number(r.total_rate).toLocaleString() : "-" },
+    { Header: "Unit Price", accessor: "total_rate", cell: r => r.total_rate ? "R " + Number(r.total_rate).toLocaleString() : "-" },
     { Header: "Source", accessor: "source", cell: r => <span className="text-xs text-gray-400">{r.source || "-"}</span> }
   ];
 
   const filtered = items.filter(i => i.category === category);
-  const isEmpty = items.length === 0;
 
+  // Rest of component stays unchanged from line 141 onwards
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold">Pricing Database</h2>
-          <p className="text-gray-500 mt-1">{items.length} pricing items</p>
+          <p className="text-gray-500 mt-1">{filtered.length} items in <span className="capitalize">{category}</span></p>
         </div>
-        <div className="flex gap-2">
-          {isEmpty && (
-            <button onClick={handleSeed} disabled={seeding} className="btn-success">
-              {seeding ? "Seeding..." : "Seed with ASAQS 2024 Rates"}
-            </button>
-          )}
-          <button onClick={() => setShowNew(true)} className="btn-primary">Add Item</button>
+        <div className="flex gap-3">
+          <button className="btn-secondary" onClick={() => setShowNew(!showNew)}>{showNew ? "Cancel" : "Add Item"}</button>
+          <button className="btn-primary" onClick={handleSeed} disabled={seeding}>{seeding ? "Seeding..." : "Seed ASAQS Data"}</button>
         </div>
       </div>
 
-      {isEmpty ? (
-        <div className="card p-12 text-center">
-          <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Pricing Database is Empty</h3>
-          <p className="text-gray-500 mb-4 max-w-md mx-auto">Click "Seed with ASAQS 2024 Rates" to populate with industry-standard pricing for materials, plant hire, and labour rates.</p>
-          <button onClick={handleSeed} disabled={seeding} className="btn-success px-8 py-3">
-            {seeding ? "Seeding..." : "Seed with ASAQS 2024 Rates"}
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="flex gap-2 mb-4">
-            {["materials", "plant", "labour"].map(c => (
-              <button key={c} onClick={() => setCategory(c)}
-                className={"px-4 py-2 rounded-lg text-sm font-medium transition-colors " + (category === c ? "bg-safety-600 text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50")}>
-                {c.charAt(0).toUpperCase() + c.slice(1)}
-              </button>
-            ))}
-          </div>
-          <DataTable columns={cols} data={filtered} loading={loading} searchable emptyMessage="No pricing items in this category." />
-        </>
+      {/* Category Tabs */}
+      <div className="flex gap-2 mb-6">
+        {["materials", "plant", "labour"].map(cat => (
+          <button key={cat} onClick={() => setCategory(cat)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              category === cat ? "bg-safety-600 text-white" : "bg-safety-800 text-safety-200 hover:bg-safety-700"
+            }`}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</button>
+        ))}
+      </div>
+
+      {/* New Item Form */}
+      {showNew && (
+        <form onSubmit={handleCreate} className="card mb-6"><div className="card-body grid grid-cols-3 gap-4">
+          <div><label className="label">Code</label><input type="text" className="input" value={form.code} onChange={e => setForm({...form, code: e.target.value})} placeholder="e.g. CON-G30" /></div>
+          <div className="col-span-2"><label className="label">Description *</label><input type="text" className="input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Item description" /></div>
+          <div><label className="label">Unit</label><input type="text" className="input" value={form.unit} onChange={e => setForm({...form, unit: e.target.value})} placeholder="m3, hr, each" /></div>
+          <div><label className="label">Supply Rate (R)</label><input type="number" className="input" value={form.supply_rate} onChange={e => setForm({...form, supply_rate: e.target.value})} placeholder="0" /></div>
+          <div><label className="label">Install Rate (R)</label><input type="number" className="input" value={form.install_rate} onChange={e => setForm({...form, install_rate: e.target.value})} placeholder="0" /></div>
+          <div><label className="label">Total Rate (R)</label><input type="number" className="input" value={form.total_rate} onChange={e => setForm({...form, total_rate: e.target.value})} placeholder="Auto-calculated" /></div>
+          <div><label className="label">Region</label><input type="text" className="input" value={form.region} onChange={e => setForm({...form, region: e.target.value})} placeholder="national" /></div>
+          <div><label className="label">Source</label><input type="text" className="input" value={form.source} onChange={e => setForm({...form, source: e.target.value})} placeholder="e.g. ASAQS 2024" /></div>
+          <div className="flex items-end"><button type="submit" className="btn-primary">Save Item</button></div>
+        </div></form>
       )}
 
-      <Modal isOpen={showNew} onClose={() => setShowNew(false)} title="Add Pricing Item">
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div><label className="label">Category</label>
-            <select className="input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-              <option value="materials">Materials</option>
-              <option value="plant">Plant and Equipment</option>
-              <option value="labour">Labour</option>
-            </select>
-          </div>
-          <div><label className="label">Description *</label>
-            <input type="text" className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="e.g. Concrete 25MPa ready mix" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Code</label><input type="text" className="input" value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} /></div>
-            <div><label className="label">Unit</label><input type="text" className="input" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} placeholder="m3, ton, each" /></div>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div><label className="label">Supply Rate</label><input type="number" className="input" value={form.supply_rate} onChange={e => setForm({ ...form, supply_rate: e.target.value })} /></div>
-            <div><label className="label">Install Rate</label><input type="number" className="input" value={form.install_rate} onChange={e => setForm({ ...form, install_rate: e.target.value })} /></div>
-            <div><label className="label">Total Rate</label><input type="number" className="input" value={form.total_rate} onChange={e => setForm({ ...form, total_rate: e.target.value })} /></div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Region</label>
-              <select className="input" value={form.region} onChange={e => setForm({ ...form, region: e.target.value })}>
-                <option value="national">National</option>
-                <option value="gauteng">Gauteng</option>
-                <option value="western_cape">Western Cape</option>
-                <option value="kwazulu_natal">KwaZulu-Natal</option>
-              </select>
-            </div>
-            <div><label className="label">Source</label><input type="text" className="input" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} placeholder="ASAQS, supplier quote" /></div>
-          </div>
-          <button type="submit" className="btn-primary w-full">Add Item</button>
-        </form>
-      </Modal>
+      {/* Items Table */}
+      <DataTable columns={cols} data={filtered} loading={loading} searchable emptyMessage="No pricing data. Click 'Seed ASAQS Data' to load industry-standard rates." />
     </div>
   );
 }
