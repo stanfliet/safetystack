@@ -1,4 +1,4 @@
-﻿import { Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ui/ProtectedRoute";
 import Layout from "./components/Layout";
 import Login from "./pages/auth/Login";
@@ -66,7 +66,7 @@ export default function App() {
         <Route path="knowledge-search" element={<KnowledgeSearch />} />
         <Route path="health-safety" element={<HealthSafetyHub />} />
         <Route path="commercial/boq-upload" element={<BOQUpload />} />
-       <Route path="training" element={<TrainingCenter />} />
+        <Route path="training" element={<TrainingCenter />} />
         <Route path="health-safety/:id" element={<HSFileViewer />} />
       </Route>
     </Routes>
