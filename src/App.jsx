@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import ProtectedRoute from "./components/ui/ProtectedRoute";
 import Layout from "./components/Layout";
 import Login from "./pages/auth/Login";
@@ -37,9 +38,10 @@ import TenderManagement from './pages/tenders/TenderManagement';
 import RAGKnowledgeBase from './pages/intelligence/RAGKnowledgeBase';
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="projects" element={<Projects />} />
@@ -76,6 +78,8 @@ export default function App() {
         <Route path="pricing/manage" element={<PricingDatabase />} />
         <Route path="rag-knowledge" element={<RAGKnowledgeBase />} />
       </Route>
-    </Routes>
+      </Routes>
+      <VercelAnalytics />
+    </>
   );
 }
