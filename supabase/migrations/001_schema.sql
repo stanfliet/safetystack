@@ -1,4 +1,5 @@
-﻿-- SafetyStack Complete Database Schema
+-- SafetyStack Complete Database Schema
+-- Idempotent — safe to run multiple times
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Profiles (auto-created via trigger)
@@ -8,7 +9,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   avatar_url TEXT, phone TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 CREATE OR REPLACE FUNCTION handle_new_user() RETURNS TRIGGER AS $$
@@ -32,9 +35,13 @@ CREATE TABLE IF NOT EXISTS projects (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own projects" ON projects;
 CREATE POLICY "Users can view own projects" ON projects FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create projects" ON projects;
 CREATE POLICY "Users can create projects" ON projects FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own projects" ON projects;
 CREATE POLICY "Users can update own projects" ON projects FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own projects" ON projects;
 CREATE POLICY "Users can delete own projects" ON projects FOR DELETE USING (auth.uid() = user_id);
 
 -- Safety Documents
@@ -46,9 +53,13 @@ CREATE TABLE IF NOT EXISTS safety_documents (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE safety_documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own documents" ON safety_documents;
 CREATE POLICY "Users can view own documents" ON safety_documents FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create documents" ON safety_documents;
 CREATE POLICY "Users can create documents" ON safety_documents FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own documents" ON safety_documents;
 CREATE POLICY "Users can update own documents" ON safety_documents FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own documents" ON safety_documents;
 CREATE POLICY "Users can delete own documents" ON safety_documents FOR DELETE USING (auth.uid() = user_id);
 
 -- Risk Assessments
@@ -61,8 +72,11 @@ CREATE TABLE IF NOT EXISTS risk_assessments (
   reviewed_by TEXT, review_date DATE, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE risk_assessments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own risk assessments" ON risk_assessments;
 CREATE POLICY "Users can view own risk assessments" ON risk_assessments FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create risk assessments" ON risk_assessments;
 CREATE POLICY "Users can create risk assessments" ON risk_assessments FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own risk assessments" ON risk_assessments;
 CREATE POLICY "Users can update own risk assessments" ON risk_assessments FOR UPDATE USING (auth.uid() = user_id);
 
 -- Inspections
@@ -75,8 +89,11 @@ CREATE TABLE IF NOT EXISTS inspections (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE inspections ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own inspections" ON inspections;
 CREATE POLICY "Users can view own inspections" ON inspections FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create inspections" ON inspections;
 CREATE POLICY "Users can create inspections" ON inspections FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own inspections" ON inspections;
 CREATE POLICY "Users can update own inspections" ON inspections FOR UPDATE USING (auth.uid() = user_id);
 
 -- Incidents
@@ -90,8 +107,11 @@ CREATE TABLE IF NOT EXISTS incidents (
   dol_report_number TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE incidents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own incidents" ON incidents;
 CREATE POLICY "Users can view own incidents" ON incidents FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create incidents" ON incidents;
 CREATE POLICY "Users can create incidents" ON incidents FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own incidents" ON incidents;
 CREATE POLICY "Users can update own incidents" ON incidents FOR UPDATE USING (auth.uid() = user_id);
 
 -- Workers
@@ -105,8 +125,11 @@ CREATE TABLE IF NOT EXISTS workers (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE workers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own workers" ON workers;
 CREATE POLICY "Users can view own workers" ON workers FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create workers" ON workers;
 CREATE POLICY "Users can create workers" ON workers FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own workers" ON workers;
 CREATE POLICY "Users can update own workers" ON workers FOR UPDATE USING (auth.uid() = user_id);
 
 -- Tender Documents
@@ -119,8 +142,11 @@ CREATE TABLE IF NOT EXISTS tender_documents (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE tender_documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own tender documents" ON tender_documents;
 CREATE POLICY "Users can view own tender documents" ON tender_documents FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create tender documents" ON tender_documents;
 CREATE POLICY "Users can create tender documents" ON tender_documents FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own tender documents" ON tender_documents;
 CREATE POLICY "Users can update own tender documents" ON tender_documents FOR UPDATE USING (auth.uid() = user_id);
 
 -- Pricing Items
@@ -132,8 +158,11 @@ CREATE TABLE IF NOT EXISTS pricing_items (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE pricing_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own pricing items" ON pricing_items;
 CREATE POLICY "Users can view own pricing items" ON pricing_items FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create pricing items" ON pricing_items;
 CREATE POLICY "Users can create pricing items" ON pricing_items FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own pricing items" ON pricing_items;
 CREATE POLICY "Users can update own pricing items" ON pricing_items FOR UPDATE USING (auth.uid() = user_id);
 
 -- Compliance Actions
@@ -145,8 +174,11 @@ CREATE TABLE IF NOT EXISTS compliance_actions (
   due_date DATE, assigned_to TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE compliance_actions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own compliance actions" ON compliance_actions;
 CREATE POLICY "Users can view own compliance actions" ON compliance_actions FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create compliance actions" ON compliance_actions;
 CREATE POLICY "Users can create compliance actions" ON compliance_actions FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own compliance actions" ON compliance_actions;
 CREATE POLICY "Users can update own compliance actions" ON compliance_actions FOR UPDATE USING (auth.uid() = user_id);
 
 -- Agent Conversations
@@ -156,8 +188,11 @@ CREATE TABLE IF NOT EXISTS agent_conversations (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE agent_conversations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own conversations" ON agent_conversations;
 CREATE POLICY "Users can view own conversations" ON agent_conversations FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create conversations" ON agent_conversations;
 CREATE POLICY "Users can create conversations" ON agent_conversations FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own conversations" ON agent_conversations;
 CREATE POLICY "Users can update own conversations" ON agent_conversations FOR UPDATE USING (auth.uid() = user_id);
 
 -- Subscriptions
@@ -170,6 +205,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own subscription" ON subscriptions;
 CREATE POLICY "Users can view own subscription" ON subscriptions FOR SELECT USING (auth.uid() = user_id);
 
 -- Contractor Onboardings
@@ -181,9 +217,99 @@ CREATE TABLE IF NOT EXISTS contractor_onboardings (
   step INTEGER DEFAULT 1, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE contractor_onboardings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own onboarding" ON contractor_onboardings;
 CREATE POLICY "Users can view own onboarding" ON contractor_onboardings FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create onboarding" ON contractor_onboardings;
 CREATE POLICY "Users can create onboarding" ON contractor_onboardings FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own onboarding" ON contractor_onboardings;
 CREATE POLICY "Users can update own onboarding" ON contractor_onboardings FOR UPDATE USING (auth.uid() = user_id);
+
+-- Additional tables for extended features
+CREATE TABLE IF NOT EXISTS boq_items (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  item_number TEXT, description TEXT NOT NULL, unit TEXT, quantity DECIMAL(15,2), rate DECIMAL(15,2),
+  amount DECIMAL(15,2) GENERATED ALWAYS AS (quantity * rate) STORED,
+  category TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE boq_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own boq items" ON boq_items;
+CREATE POLICY "Users can view own boq items" ON boq_items FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create boq items" ON boq_items;
+CREATE POLICY "Users can create boq items" ON boq_items FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own boq items" ON boq_items;
+CREATE POLICY "Users can update own boq items" ON boq_items FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS variations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  variation_number TEXT, title TEXT NOT NULL, description TEXT,
+  type TEXT NOT NULL CHECK (type IN ('addition','deletion','amendment')),
+  amount DECIMAL(15,2), status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','submitted','approved','rejected')),
+  created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE variations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own variations" ON variations;
+CREATE POLICY "Users can view own variations" ON variations FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create variations" ON variations;
+CREATE POLICY "Users can create variations" ON variations FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own variations" ON variations;
+CREATE POLICY "Users can update own variations" ON variations FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS intelligence_insights (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL, description TEXT, insight_type TEXT, severity TEXT,
+  action_items TEXT[], is_read BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE intelligence_insights ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own intelligence" ON intelligence_insights;
+CREATE POLICY "Users can view own intelligence" ON intelligence_insights FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create intelligence" ON intelligence_insights;
+CREATE POLICY "Users can create intelligence" ON intelligence_insights FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  action TEXT NOT NULL, entity_type TEXT, entity_id TEXT,
+  details JSONB DEFAULT '{}', project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own activity" ON activity_logs;
+CREATE POLICY "Users can view own activity" ON activity_logs FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create activity" ON activity_logs;
+CREATE POLICY "Users can create activity" ON activity_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS documents (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  filename TEXT, original_name TEXT, file_type TEXT, file_size BIGINT,
+  text_content TEXT, status TEXT DEFAULT 'uploaded', ocr_used BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own documents_upload" ON documents;
+CREATE POLICY "Users can view own documents_upload" ON documents FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create documents_upload" ON documents;
+CREATE POLICY "Users can create documents_upload" ON documents FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS hs_files (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL, client TEXT, site_address TEXT, scope_of_works TEXT,
+  principal_contractor TEXT, safety_officer TEXT, number_of_workers INTEGER,
+  project_duration TEXT, logo_url TEXT,
+  status TEXT DEFAULT 'draft' CHECK (status IN ('draft','review','approved','expired')),
+  created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE hs_files ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own hs_files" ON hs_files;
+CREATE POLICY "Users can view own hs_files" ON hs_files FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can create hs_files" ON hs_files;
+CREATE POLICY "Users can create hs_files" ON hs_files FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own hs_files" ON hs_files;
+CREATE POLICY "Users can update own hs_files" ON hs_files FOR UPDATE USING (auth.uid() = user_id);
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
@@ -197,3 +323,8 @@ CREATE INDEX IF NOT EXISTS idx_pricing_items_category ON pricing_items(category)
 CREATE INDEX IF NOT EXISTS idx_compliance_actions_project ON compliance_actions(project_id);
 CREATE INDEX IF NOT EXISTS idx_agent_conversations_user ON agent_conversations(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_boq_items_project ON boq_items(project_id);
+CREATE INDEX IF NOT EXISTS idx_variations_project ON variations(project_id);
+CREATE INDEX IF NOT EXISTS idx_intelligence_insights_project ON intelligence_insights(project_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user ON activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_hs_files_project ON hs_files(project_id);
