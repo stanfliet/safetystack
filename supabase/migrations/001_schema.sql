@@ -1,5 +1,5 @@
-﻿-- SafetyStack Complete Database Schema
--- Idempotent â€” safe to run multiple times
+-- SafetyStack Complete Database Schema
+-- Fully idempotent — safe to run unlimited times
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Profiles (auto-created via trigger)
@@ -224,14 +224,20 @@ CREATE POLICY "Users can create onboarding" ON contractor_onboardings FOR INSERT
 DROP POLICY IF EXISTS "Users can update own onboarding" ON contractor_onboardings;
 CREATE POLICY "Users can update own onboarding" ON contractor_onboardings FOR UPDATE USING (auth.uid() = user_id);
 
--- Additional tables for extended features
+-- Extended feature tables
+-- Each uses CREATE TABLE IF NOT EXISTS with subsequent ALTER TABLE ADD COLUMN IF NOT EXISTS for idempotency
+
+-- BOQ Items
 CREATE TABLE IF NOT EXISTS boq_items (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   item_number TEXT, description TEXT NOT NULL, unit TEXT, quantity DECIMAL(15,2), rate DECIMAL(15,2),
   amount DECIMAL(15,2) GENERATED ALWAYS AS (quantity * rate) STORED,
   category TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE boq_items ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE boq_items ADD CONSTRAINT boq_items_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
 ALTER TABLE boq_items ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own boq items" ON boq_items;
 CREATE POLICY "Users can view own boq items" ON boq_items FOR SELECT USING (auth.uid() = user_id);
@@ -240,14 +246,18 @@ CREATE POLICY "Users can create boq items" ON boq_items FOR INSERT WITH CHECK (a
 DROP POLICY IF EXISTS "Users can update own boq items" ON boq_items;
 CREATE POLICY "Users can update own boq items" ON boq_items FOR UPDATE USING (auth.uid() = user_id);
 
+-- Variations
 CREATE TABLE IF NOT EXISTS variations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   variation_number TEXT, title TEXT NOT NULL, description TEXT,
   type TEXT NOT NULL CHECK (type IN ('addition','deletion','amendment')),
   amount DECIMAL(15,2), status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','submitted','approved','rejected')),
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE variations ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE variations ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE variations ADD CONSTRAINT variations_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
 ALTER TABLE variations ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own variations" ON variations;
 CREATE POLICY "Users can view own variations" ON variations FOR SELECT USING (auth.uid() = user_id);
@@ -256,46 +266,57 @@ CREATE POLICY "Users can create variations" ON variations FOR INSERT WITH CHECK 
 DROP POLICY IF EXISTS "Users can update own variations" ON variations;
 CREATE POLICY "Users can update own variations" ON variations FOR UPDATE USING (auth.uid() = user_id);
 
+-- Intelligence Insights
 CREATE TABLE IF NOT EXISTS intelligence_insights (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL, description TEXT, insight_type TEXT, severity TEXT,
   action_items TEXT[], is_read BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE intelligence_insights ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE intelligence_insights ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE intelligence_insights ADD CONSTRAINT intelligence_insights_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
 ALTER TABLE intelligence_insights ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own intelligence" ON intelligence_insights;
 CREATE POLICY "Users can view own intelligence" ON intelligence_insights FOR SELECT USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Users can create intelligence" ON intelligence_insights;
 CREATE POLICY "Users can create intelligence" ON intelligence_insights FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- Activity Logs
 CREATE TABLE IF NOT EXISTS activity_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   action TEXT NOT NULL, entity_type TEXT, entity_id TEXT,
-  details JSONB DEFAULT '{}', project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  details JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE activity_logs ADD CONSTRAINT activity_logs_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own activity" ON activity_logs;
 CREATE POLICY "Users can view own activity" ON activity_logs FOR SELECT USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Users can create activity" ON activity_logs;
 CREATE POLICY "Users can create activity" ON activity_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- Documents (uploaded files)
 CREATE TABLE IF NOT EXISTS documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   filename TEXT, original_name TEXT, file_type TEXT, file_size BIGINT,
   text_content TEXT, status TEXT DEFAULT 'uploaded', ocr_used BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE documents ADD CONSTRAINT documents_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL;
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own documents_upload" ON documents;
 CREATE POLICY "Users can view own documents_upload" ON documents FOR SELECT USING (auth.uid() = user_id);
 DROP POLICY IF EXISTS "Users can create documents_upload" ON documents;
 CREATE POLICY "Users can create documents_upload" ON documents FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- H&S Files
 CREATE TABLE IF NOT EXISTS hs_files (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL, client TEXT, site_address TEXT, scope_of_works TEXT,
   principal_contractor TEXT, safety_officer TEXT, number_of_workers INTEGER,
@@ -303,6 +324,9 @@ CREATE TABLE IF NOT EXISTS hs_files (
   status TEXT DEFAULT 'draft' CHECK (status IN ('draft','review','approved','expired')),
   created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE hs_files ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE hs_files ALTER COLUMN project_id SET NOT NULL;
+ALTER TABLE hs_files ADD CONSTRAINT hs_files_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE;
 ALTER TABLE hs_files ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own hs_files" ON hs_files;
 CREATE POLICY "Users can view own hs_files" ON hs_files FOR SELECT USING (auth.uid() = user_id);
@@ -311,20 +335,6 @@ CREATE POLICY "Users can create hs_files" ON hs_files FOR INSERT WITH CHECK (aut
 DROP POLICY IF EXISTS "Users can update own hs_files" ON hs_files;
 CREATE POLICY "Users can update own hs_files" ON hs_files FOR UPDATE USING (auth.uid() = user_id);
 
-
--- Ensure columns exist on already-created tables (idempotency fix)
-ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE;
-ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
-ALTER TABLE variations ADD COLUMN IF NOT EXISTS project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE;
-ALTER TABLE variations ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
-ALTER TABLE intelligence_insights ADD COLUMN IF NOT EXISTS project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE;
-ALTER TABLE intelligence_insights ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
-ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
-ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL;
-ALTER TABLE documents ADD COLUMN IF NOT EXISTS project_id UUID REFERENCES projects(id) ON DELETE SET NULL;
-ALTER TABLE documents ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
-ALTER TABLE hs_files ADD COLUMN IF NOT EXISTS project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE;
-ALTER TABLE hs_files ADD COLUMN IF NOT EXISTS user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE;
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id);
 CREATE INDEX IF NOT EXISTS idx_safety_documents_project ON safety_documents(project_id);
@@ -342,4 +352,3 @@ CREATE INDEX IF NOT EXISTS idx_variations_project ON variations(project_id);
 CREATE INDEX IF NOT EXISTS idx_intelligence_insights_project ON intelligence_insights(project_id);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_user ON activity_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_hs_files_project ON hs_files(project_id);
-
