@@ -1,14 +1,12 @@
 -- 007 Enhanced Schema (RAG, RBAC, Pricing, Contracts, BOQ, Tenders)
--- Run this in Supabase SQL Editor
-
-DO src/pages/tenders BEGIN
+DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
     CREATE TYPE user_role AS ENUM ('super_admin','company_admin','hs_manager','safety_officer','quantity_surveyor','project_manager','employee','client');
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'contract_standard') THEN
     CREATE TYPE contract_standard AS ENUM ('gcc2010','gcc2015','fidic','nec3','nec4','jbcc');
   END IF;
-END src/pages/tenders;
+END $$;
 
 CREATE TABLE IF NOT EXISTS company_profiles (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),name TEXT NOT NULL,registration_number TEXT,tax_id TEXT,address TEXT,phone TEXT,email TEXT,logo_url TEXT,is_active BOOLEAN DEFAULT true,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
 ALTER TABLE company_profiles ENABLE ROW LEVEL SECURITY;
@@ -28,7 +26,40 @@ CREATE TABLE IF NOT EXISTS labour_rates (id UUID PRIMARY KEY DEFAULT gen_random_
 CREATE TABLE IF NOT EXISTS plant_rates (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),plant_code TEXT NOT NULL,plant_name TEXT NOT NULL,description TEXT,daily_rental_rate DECIMAL(12,4),hourly_rental_rate DECIMAL(12,4),monthly_rental_rate DECIMAL(12,4),operator_included BOOLEAN DEFAULT false,fuel_included BOOLEAN DEFAULT false,region TEXT,effective_date DATE,expiry_date DATE,metadata JSONB,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
 
 CREATE TABLE IF NOT EXISTS boq_records (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,boq_reference TEXT UNIQUE NOT NULL,title TEXT NOT NULL,description TEXT,total_value DECIMAL(15,2),currency TEXT DEFAULT 'ZAR',status TEXT DEFAULT 'draft',version INTEGER DEFAULT 1,created_by UUID NOT NULL REFERENCES auth.users(id),created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
-CREATE TABLE IF NOT EXISTS boq_items (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),boq_id UUID NOT NULL REFERENCES boq_records(id) ON DELETE CASCADE,item_number INTEGER NOT NULL,description TEXT NOT NULL,specification TEXT,unit TEXT NOT NULL,quantity DECIMAL(15,4) NOT NULL,unit_rate DECIMAL(15,4) NOT NULL,total_amount DECIMAL(15,4),materials_cost DECIMAL(15,4),labour_cost DECIMAL(15,4),plant_cost DECIMAL(15,4),equipment_cost DECIMAL(15,4),transport_cost DECIMAL(15,4),markup_percentage DECIMAL(5,2),metadata JSONB,created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS boq_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  boq_id UUID NOT NULL REFERENCES boq_records(id) ON DELETE CASCADE,
+  item_number INTEGER NOT NULL,
+  description TEXT NOT NULL,
+  specification TEXT,
+  unit TEXT NOT NULL,
+  quantity DECIMAL(15,4) NOT NULL,
+  unit_rate DECIMAL(15,4) NOT NULL,
+  total_amount DECIMAL(15,4),
+  materials_cost DECIMAL(15,4),
+  labour_cost DECIMAL(15,4),
+  plant_cost DECIMAL(15,4),
+  equipment_cost DECIMAL(15,4),
+  transport_cost DECIMAL(15,4),
+  markup_percentage DECIMAL(5,2),
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- Handle existing boq_items from prior migrations (001, 002, 007) that lack these columns
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS boq_id UUID REFERENCES boq_records(id) ON DELETE CASCADE;
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS specification TEXT;
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS unit_rate DECIMAL(15,4);
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS total_amount DECIMAL(15,4);
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS materials_cost DECIMAL(15,4);
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS labour_cost DECIMAL(15,4);
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS plant_cost DECIMAL(15,4);
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS equipment_cost DECIMAL(15,4);
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS transport_cost DECIMAL(15,4);
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS markup_percentage DECIMAL(5,2);
+ALTER TABLE boq_items ADD COLUMN IF NOT EXISTS metadata JSONB;
+-- Note: old columns (project_id, user_id, rate, amount, category, notes, status) from prior migrations
+-- remain in place for backward compatibility with existing queries
 CREATE TABLE IF NOT EXISTS rate_buildups (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),boq_item_id UUID NOT NULL REFERENCES boq_items(id) ON DELETE CASCADE,material_quantity DECIMAL(15,4),material_code TEXT,material_unit_price DECIMAL(15,4),material_total DECIMAL(15,4),labour_hours DECIMAL(15,2),labour_code TEXT,labour_unit_rate DECIMAL(15,4),labour_total DECIMAL(15,4),plant_hours DECIMAL(15,2),plant_code TEXT,plant_unit_rate DECIMAL(15,4),plant_total DECIMAL(15,4),created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
 
 CREATE TABLE IF NOT EXISTS tender_records (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,tender_reference TEXT UNIQUE NOT NULL,tender_name TEXT NOT NULL,description TEXT,client_name TEXT,tender_value DECIMAL(15,2),closing_date DATE,opening_date DATE,status TEXT DEFAULT 'preparation',document_path TEXT,evaluation_criteria JSONB,created_by UUID NOT NULL REFERENCES auth.users(id),created_at TIMESTAMPTZ DEFAULT NOW(),updated_at TIMESTAMPTZ DEFAULT NOW());
