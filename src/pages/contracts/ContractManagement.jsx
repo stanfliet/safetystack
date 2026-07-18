@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../lib/supabase';
 
 const CONTRACT_STANDARDS = ['gcc2010', 'gcc2015', 'fidic', 'nec3', 'nec4', 'jbcc'];
 

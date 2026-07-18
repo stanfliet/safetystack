@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../lib/supabase';
 
 const CATEGORIES = [
   { id: 'safety', name: 'Safety', icon: 'SHIELD' },

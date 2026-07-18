@@ -34,7 +34,6 @@ import BOQUpload from "./pages/commercial/BOQUpload";
 import TrainingCenter from "./pages/training/TrainingCenter";
 import ContractManagement from './pages/contracts/ContractManagement';
 import TenderManagement from './pages/tenders/TenderManagement';
-import PricingManagement from './pages/pricing/PricingManagement';
 import RAGKnowledgeBase from './pages/intelligence/RAGKnowledgeBase';
 export default function App() {
   return (
@@ -74,11 +73,9 @@ export default function App() {
         <Route path="health-safety/:id" element={<HSFileViewer />} />
         <Route path="contracts" element={<ContractManagement />} />
         <Route path="tenders/manage" element={<TenderManagement />} />
-        <Route path="pricing/manage" element={<PricingManagement />} />
+        <Route path="pricing/manage" element={<PricingDatabase />} />
         <Route path="rag-knowledge" element={<RAGKnowledgeBase />} />
       </Route>
     </Routes>
   );
 }
-
-
